@@ -17,6 +17,8 @@ import cv2
 from common import anorm, getsize
 from video import create_capture
 import time
+import Tkinter
+import tkFileDialog
 
 FLANN_INDEX_KDTREE = 1  # bug: flann enums are missing
 FLANN_INDEX_LSH    = 6
@@ -124,9 +126,28 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
             cur_vis[:,w1:] = cv2.drawKeypoints(cur_vis[:,w1:], kp2s, flags=4, color=kp_color)
 
         cv2.imshow(win, cur_vis)
+
     cv2.setMouseCallback(win, onmouse)
     return vis
 
+def trainImage(filename,feature_name):
+    image_t = cv2.imread(filename,0)
+    detector_t, matcher_t = init_feature(feature_name)
+    if detector_t != None:
+        print 'using', feature_name
+    else:
+        print 'unknown feature:', feature_name
+        sys.exit(1)
+    kp_t, desc_t = detector_t.detectAndCompute(image_t, None)
+
+    return image_t,detector_t, matcher_t,kp_t, desc_t
+
+
+def openFile():
+ 
+    Tkinter.Tk().withdraw() # Close the root window
+    in_path = tkFileDialog.askopenfilename()
+    print in_path
 
 if __name__ == '__main__':
     print __doc__
@@ -136,22 +157,12 @@ if __name__ == '__main__':
     opts = dict(opts)
     feature_name = opts.get('--feature', 'sift')
     
+    openFile()
     fn1 = './images/ikea.jpeg'
 
-    img1 = cv2.imread(fn1, 0)
-    #img2 = cv2.imread(fn2, 0)
-    detector, matcher = init_feature(feature_name)
-    if detector != None:
-        print 'using', feature_name
-    else:
-        print 'unknown feature:', feature_name
-        sys.exit(1)
-
-
-    kp1, desc1 = detector.detectAndCompute(img1, None)
-    #kp2, desc2 = detector.detectAndCompute(img2, None)
-    #print 'img1 - %d features, img2 - %d features' % (len(kp1), len(kp2))
-
+    img1, detector, matcher, kp1, desc1 = trainImage(fn1,feature_name)
+    
+    
     try: video_src = video_src[0]
     except: video_src = 0
     cam = create_capture(video_src)
@@ -175,6 +186,8 @@ if __name__ == '__main__':
         if cv2.waitKey(1) & 0xff == ord('q'):
             break
     
+    
+
     # static image comparison
     def match_and_draw(win):
         print 'matching...'

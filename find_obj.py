@@ -83,7 +83,7 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
         p1 = np.int32([kpp[0].pt for kpp in kp_pairs])
         p2 = np.int32([kpp[1].pt for kpp in kp_pairs]) + (w1, 0)
 
-        green = (0, 255, 0)
+        green = (0, 255, 0,120)
         red = (0, 0, 255)
         white = (255, 255, 255)
         kp_color = (51, 103, 236)
@@ -157,8 +157,8 @@ if __name__ == '__main__':
     opts = dict(opts)
     feature_name = opts.get('--feature', 'sift')
     
-    openFile()
-    fn1 = './images/ikea.jpeg'
+    #openFile()
+    fn1 = './images/aplus.jpeg'
 
     img1, detector, matcher, kp1, desc1 = trainImage(fn1,feature_name)
     

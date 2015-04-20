@@ -63,79 +63,93 @@ def filter_matches(kp1, kp2, matches, ratio = 0.75):
     kp_pairs = zip(mkp1, mkp2)
     return p1, p2, kp_pairs
 
-def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
-    h1, w1 = img1.shape[:2]
+def explore_match(win, img_arr,imageNames, img2, kp_pairs_arr, status_arr = None, H_arr = None):
+    # tester
+    # img1 = img_arr[1]
+    # kp_pairs = kp_pairs_arr[1]
+    # status = status_arr[1]
+    # H = H_arr[1]
+
+    # store each images' height & width
+    h_arr = []
+    w_arr = []
+    
+    for i in range(0,len(img_arr)):
+        h1, w1 = img_arr[i].shape[:2]
+        h_arr.append(h1)
+        w_arr.append(w1)
+    
     h2, w2  = img2.shape[:2]
-    vis = np.zeros((max(h1, h2), w1+w2 ), np.uint8)
-    vis[:h1, :w1 ] = img1
-    vis[:h2, w1:w1+w2 ] = img2
+    h_arr_sum = np.sum(h_arr)
+    vis = np.zeros((max(h_arr_sum, h2), max(w_arr)+w2 ), np.uint8)
+
+    #store each images' y location except the 1st
+    loc_y_arr =[]
+
+    for i in range(0,len(img_arr)):
+        loc_y_arr.append(sum(h_arr[:i]))
+
+    #locate image
+    for i in range(0,len(img_arr)):
+        vis[loc_y_arr[i]:h_arr[i]+loc_y_arr[i], :w_arr[i]] = img_arr[i]
+
+
+    vis[:h2,  max(w_arr): max(w_arr)+w2 ] = img2
     vis = cv2.cvtColor(vis, cv2.COLOR_GRAY2BGR)
 
-    if H is not None:
-        corners = np.float32([[0, 0], [w1, 0], [w1, h1], [0, h1]])
-        corners = np.int32( cv2.perspectiveTransform(corners.reshape(1, -1, 2), H).reshape(-1, 2) + (w1, 0) )
-        cv2.polylines(vis, [corners], True, (255, 255, 255))
+    for i in range(0,len(img_arr)):
+        if H_arr[i] is not None:
+            corners = np.float32([[0, 0], [w_arr[i], 0], [w_arr[i], h_arr[i]], [0,  h_arr[i]]])
+            corners = np.int32( cv2.perspectiveTransform(corners.reshape(1, -1, 2), H_arr[i]).reshape(-1, 2) + (max(w_arr), 0) )
+            cv2.polylines(vis, [corners], True, (255, 255, 255))
+            cv2.putText(vis,imageNames[i],tuple(corners[0]),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,0),2)
 
-    if status is None:
-        status = np.ones(len(kp_pairs), np.bool_)
+        # if status_arr[i] is None:
+        #     status_arr[i] = np.ones(len(kp_pairs_arr[i]), np.bool_)
 
-    try:
-        p1 = np.int32([kpp[0].pt for kpp in kp_pairs])
-        p2 = np.int32([kpp[1].pt for kpp in kp_pairs]) + (w1, 0)
+        # try:
+        #     p1 = np.int32([kpp[0].pt for kpp in kp_pairs])
+        #     p2 = np.int32([kpp[1].pt for kpp in kp_pairs]) + (w_arr[i], 0)
 
-        green = (0, 255, 0,120)
-        red = (0, 0, 255)
-        white = (255, 255, 255)
-        kp_color = (51, 103, 236)
-        for (x1, y1), (x2, y2), inlier in zip(p1, p2, status):
-            if inlier:
-                col = green
-                cv2.circle(vis, (x1, y1), 2, col, -1)
-                cv2.circle(vis, (x2, y2), 2, col, -1)
-            else:
-                col = red
-                r = 2
-                thickness = 3
-                cv2.line(vis, (x1-r, y1-r), (x1+r, y1+r), col, thickness)
-                cv2.line(vis, (x1-r, y1+r), (x1+r, y1-r), col, thickness)
-                cv2.line(vis, (x2-r, y2-r), (x2+r, y2+r), col, thickness)
-                cv2.line(vis, (x2-r, y2+r), (x2+r, y2-r), col, thickness)
-        vis0 = vis.copy()
-        for (x1, y1), (x2, y2), inlier in zip(p1, p2, status):
-            if inlier:
-                cv2.line(vis, (x1, y1), (x2, y2), green)
-    except:
-        pass
+        #     green = (0, 255, 0,120)
+        #     red = (0, 0, 255)
+        #     white = (255, 255, 255)
+        #     kp_color = (51, 103, 236)
+        #     for (x1, y1), (x2, y2), inlier in zip(p1, p2, status_arr[i]):
+        #         if inlier:
+        #             col = green
+        #             cv2.circle(vis, (x1, y1), 2, col, -1)
+        #             cv2.circle(vis, (x2, y2), 2, col, -1)
+        #         else:
+        #             col = red
+        #             r = 2
+        #             thickness = 3
+        #             cv2.line(vis, (x1-r, y1-r), (x1+r, y1+r), col, thickness)
+        #             cv2.line(vis, (x1-r, y1+r), (x1+r, y1-r), col, thickness)
+        #             cv2.line(vis, (x2-r, y2-r), (x2+r, y2+r), col, thickness)
+        #             cv2.line(vis, (x2-r, y2+r), (x2+r, y2-r), col, thickness)
+        #     vis0 = vis.copy()
+        #     for (x1, y1), (x2, y2), inlier in zip(p1, p2, status_arr[i]):
+        #         if inlier:
+        #             cv2.line(vis, (x1, y1), (x2, y2), green)
+        # except:
+        #     pass
     cv2.imshow(win, vis)
-    def onmouse(event, x, y, flags, param):
-        cur_vis = vis
-        if flags & cv2.EVENT_FLAG_LBUTTON:
-            cur_vis = vis0.copy()
-            r = 8
-            m = (anorm(p1 - (x, y)) < r) | (anorm(p2 - (x, y)) < r)
-            idxs = np.where(m)[0]
-            kp1s, kp2s = [], []
-            for i in idxs:
-                 (x1, y1), (x2, y2) = p1[i], p2[i]
-                 col = (red, green)[status[i]]
-                 cv2.line(cur_vis, (x1, y1), (x2, y2), col)
-                 kp1, kp2 = kp_pairs[i]
-                 kp1s.append(kp1)
-                 kp2s.append(kp2)
-            cur_vis = cv2.drawKeypoints(cur_vis, kp1s, flags=4, color=kp_color)
-            cur_vis[:,w1:] = cv2.drawKeypoints(cur_vis[:,w1:], kp2s, flags=4, color=kp_color)
-
-        cv2.imshow(win, cur_vis)
-
-    cv2.setMouseCallback(win, onmouse)
     return vis
 
-def trainImage(filename, detector):
-    image_t = cv2.imread(filename,0)
-    
-    kp_t, desc_t = detector.detectAndCompute(image_t, None)
+def trainImage(filenames, detector):
+    image_return = []
+    kp_return = []
+    des_return = []
 
-    return image_t,kp_t, desc_t
+    for fn in filenames:
+        image_t = cv2.imread(fn,0)
+        kp_t, desc_t = detector.detectAndCompute(image_t, None)
+        image_return.append(image_t)
+        kp_return.append(kp_t)
+        des_return.append(desc_t)
+    
+    return image_return,kp_return, des_return
 
 
 def openFile():
@@ -153,7 +167,8 @@ if __name__ == '__main__':
     feature_name = opts.get('--feature', 'sift')
     
     #openFile()
-    fn1 = './images/aplus.jpeg'
+    imageFiles  = ['./images/aplus.jpeg','./images/ikea.jpeg','./images/ag.jpeg']
+    imageNames = ['aplus','ikea','a&g']
 
     detector, matcher = init_feature(feature_name)
 
@@ -163,29 +178,40 @@ if __name__ == '__main__':
         print 'unknown feature:', feature_name
         sys.exit(1)
 
-    img1, kp1, desc1 = trainImage(fn1,detector)
+    img_arr, kp_arr, desc_arr = trainImage(imageFiles,detector)
     
     
     try: video_src = video_src[0]
     except: video_src = 0
     cam = create_capture(video_src)
 
+   
     # video feed
     while True:
         ret, frame = cam.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         frame = cv2.resize(frame, (360, 240)) 
+        
         kp2, desc2 = detector.detectAndCompute(frame, None)
-        raw_matches = matcher.knnMatch(desc1, trainDescriptors = desc2, k = 2) #2
-        p1, p2, kp_pairs = filter_matches(kp1, kp2, raw_matches)
-        if len(p1) >= 4:
-            H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
-            print '%d / %d  inliers/matched' % (np.sum(status), len(status))
-        else:
-            H, status = None, None
-            print '%d matches found, not enough for homography estimation' % len(p1)
+        kp_pairs_arr = []
+        status_arr = []
+        H_arr = []
+        
+        for i in range(0,len(desc_arr)):
+            raw_matches = matcher.knnMatch(desc_arr[i], trainDescriptors = desc2, k = 2) #2
+            p1, p2, kp_pairs = filter_matches(kp_arr[i], kp2, raw_matches)
+            
+            kp_pairs_arr.append(kp_pairs)
+            if len(p1) >= 12:
+                H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
+                print '%d / %d  inliers/matched' % (np.sum(status), len(status))
+            else:
+                H, status = None, None
+                print '%d matches found, not enough for homography estimation' % len(p1)
+            status_arr.append(status)
+            H_arr.append(H)
 
-        vis = explore_match('find_obj', img1, frame, kp_pairs, status, H)
+        vis = explore_match('find_obj', img_arr,imageNames, frame, kp_pairs_arr, status_arr, H_arr)
         if cv2.waitKey(1) & 0xff == ord('q'):
             break
     
@@ -198,10 +224,10 @@ if __name__ == '__main__':
         p1, p2, kp_pairs = filter_matches(kp1, kp2, raw_matches)
         if len(p1) >= 4:
             H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
-            print '%d / %d  inliers/matched' % (np.sum(status), len(status))
+            #print '%d / %d  inliers/matched' % (np.sum(status), len(status))
         else:
             H, status = None, None
-            print '%d matches found, not enough for homography estimation' % len(p1)
+            #print '%d matches found, not enough for homography estimation' % len(p1)
 
         vis = explore_match(win, img1, img2, kp_pairs, status, H)
         

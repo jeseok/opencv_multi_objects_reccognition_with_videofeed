@@ -13,7 +13,6 @@ USAGE
 '''
 
 import numpy as np
-import os
 import cv2
 from common import anorm, getsize
 from video import create_capture
@@ -162,7 +161,7 @@ def openFile():
 if __name__ == '__main__':
     print __doc__
 
-    import sys, getopt
+    import sys, getopt, os
     opts, args = getopt.getopt(sys.argv[1:], '', ['feature='])
     opts = dict(opts)
     feature_name = opts.get('--feature', 'sift')

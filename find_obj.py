@@ -130,17 +130,12 @@ def explore_match(win, img1, img2, kp_pairs, status = None, H = None):
     cv2.setMouseCallback(win, onmouse)
     return vis
 
-def trainImage(filename,feature_name):
+def trainImage(filename, detector):
     image_t = cv2.imread(filename,0)
-    detector_t, matcher_t = init_feature(feature_name)
-    if detector_t != None:
-        print 'using', feature_name
-    else:
-        print 'unknown feature:', feature_name
-        sys.exit(1)
-    kp_t, desc_t = detector_t.detectAndCompute(image_t, None)
+    
+    kp_t, desc_t = detector.detectAndCompute(image_t, None)
 
-    return image_t,detector_t, matcher_t,kp_t, desc_t
+    return image_t,kp_t, desc_t
 
 
 def openFile():
@@ -160,7 +155,15 @@ if __name__ == '__main__':
     #openFile()
     fn1 = './images/aplus.jpeg'
 
-    img1, detector, matcher, kp1, desc1 = trainImage(fn1,feature_name)
+    detector, matcher = init_feature(feature_name)
+
+    if detector != None:
+        print 'using', feature_name
+    else:
+        print 'unknown feature:', feature_name
+        sys.exit(1)
+
+    img1, kp1, desc1 = trainImage(fn1,detector)
     
     
     try: video_src = video_src[0]

@@ -13,6 +13,7 @@ USAGE
 '''
 
 import numpy as np
+import os
 import cv2
 from common import anorm, getsize
 from video import create_capture
@@ -166,9 +167,16 @@ if __name__ == '__main__':
     opts = dict(opts)
     feature_name = opts.get('--feature', 'sift')
     
-    #openFile()
-    imageFiles  = ['./images/aplus.jpeg','./images/ikea.jpeg','./images/ag.jpeg']
-    imageNames = ['aplus','ikea','a&g']
+    try:
+        img_dir = args[0]
+    except:
+        img_dir = 'images'
+
+    imageNames = os.listdir(img_dir)
+    imageFiles = []
+
+    for i in range(0, len(imageNames)):
+        imageFiles.append(img_dir+'/'+imageNames[i])
 
     detector, matcher = init_feature(feature_name)
 
@@ -190,7 +198,7 @@ if __name__ == '__main__':
     while True:
         ret, frame = cam.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        frame = cv2.resize(frame, (360, 240)) 
+        frame = cv2.resize(frame, (int(360*1.5), int(240*1.5))) # resize to find proper speed & size of cam window
         
         kp2, desc2 = detector.detectAndCompute(frame, None)
         kp_pairs_arr = []
